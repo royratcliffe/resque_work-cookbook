@@ -19,22 +19,12 @@
 
 include_recipe 'god'
 
-# Identify the Resque worker applications. Do this in an automatic way. Expect
-# applications to live in a folder. By default look for them at /srv. If a
-# folder matches the pattern /srv/APP_NAME/current, then assume that it contains
-# a Rails app needing some Resque work! Beware of backups; move them out of the
-# /srv folder.
-ruby_block "resque_work" do
-  block do
-    Dir["/srv/*/current"].each do |rails_root|
-      app_name = ::File.basename(::File.dirname(rails_root))
-      god_monitor "#{app_name}_resque" do
-        config "resque.god.erb"
-        max_memory 150
-        cpu 50
-        rails_root rails_root
-        app_name app_name
-      end
-    end
+data_bag('apps').each do |app_name|
+  god_monitor "#{app_name}_resque" do
+    config "resque.god.erb"
+    max_memory 150
+    cpu 50
+    rails_root "/srv/#{app_name}/current"
+    app_name app_name
   end
 end
